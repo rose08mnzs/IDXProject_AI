@@ -1,4 +1,4 @@
-# IDXProject_NLP
+# IDXProject_AI
 A production multi-agent AI assistant capable of real-time MLS property search, market analytics, semantic recommendations, RAG knowledge retrieval, and WhatsApp + email communication — powered by OpenClaw.
 
 ## Stack

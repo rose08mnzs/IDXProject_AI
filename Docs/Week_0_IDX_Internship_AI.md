@@ -3,6 +3,7 @@
 ## Create new directory
 ```bash
  mkdir idxproject
+ cd idxproject
 ```
 
 ## Install Node.js
