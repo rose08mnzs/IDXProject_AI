@@ -8,11 +8,29 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 - WhatsApp
 - Python / TypeScript
 
+## Project structure
+- IDXProject_AI
+  - Docs/
+      - Week_0_IDX_Internship_AI.md
+      - Week_1_IDX_Internship_AI.md
+      - Week_2_IDX_Internship_AI.md
+  - src/
+      - parser/
+          - propertyParser.ts
+      - tests/
+          - propertyParser.test.ts
+      - types/
+          - propertyFilters.ts
+  - package.json
+  - tsconfig.json
+  - README.md
+
 ## Current status
-- Week 1 completed
+- Week 2 completed
 - OpenClaw running locally
 - MySQL database created and imported
 - WhatsApp channel linked and tested
+- Natural language property search parser implemented
 
 ## Roadmap
 - Week 0: Environment Setup

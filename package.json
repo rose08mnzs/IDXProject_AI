@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsx": "^4.22.4"
+  },
+  "scripts": {
+    "test:week2": "tsx src/tests/propertyParser.test.ts"
+  }
+}
