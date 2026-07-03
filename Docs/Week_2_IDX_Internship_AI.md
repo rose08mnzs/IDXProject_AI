@@ -63,3 +63,6 @@ npm install -D @types/node
 ```bash
 npm run test:week2
 ```
+
+## Deliverable
+![alt text](image.png)
