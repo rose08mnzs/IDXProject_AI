@@ -187,3 +187,8 @@ npm run openclaw -- gateway start
 ```bash
 npm run openclaw -- gateway status
 ```
+
+
+
+## Deliverable
+![alt text](Images/week1.png)

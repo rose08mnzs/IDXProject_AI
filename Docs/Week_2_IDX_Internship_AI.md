@@ -65,4 +65,4 @@ npm run test:week2
 ```
 
 ## Deliverable
-![alt text](image.png)
+![alt text](Images/week2.png)
