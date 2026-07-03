@@ -191,4 +191,4 @@ npm run openclaw -- gateway status
 
 
 ## Deliverable
-![alt text](Images/week1.png)
+![alt text](Images/week1.jpeg)
