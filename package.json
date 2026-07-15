@@ -1,9 +1,17 @@
 {
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
     "tsx": "^4.22.4"
   },
   "scripts": {
-    "test:week2": "tsx src/tests/propertyParser.test.ts"
+    "test:week2": "tsx src/tests/propertyParser.test.ts",
+    "test:week3": "tsx src/tests/testDb.test.ts && tsx src/tests/testSearch.test.ts && tsx src/tests/testWeek3Skill.test.ts",
+    "dev:api": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.5"
   }
 }
