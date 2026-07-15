@@ -18,7 +18,7 @@ Connect the NLP property parser to the MLS database and return live property sea
         - propertyFilters.ts
       - tests/
         - testDb.test.ts
-        - propertyParser.test.ts
+        - testSearch.test.ts
         - week3Search.test.ts
     - OpenClaw
       - src/
