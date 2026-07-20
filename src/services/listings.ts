@@ -64,13 +64,13 @@ export async function searchActiveListings(
 
   const { sql: whereSql, params } = buildWhereClause(filters);
 
-  //console.log("========== ACTIVE LISTING SEARCH ==========");
-  //console.log("Filters:", filters);
-  //console.log("WHERE SQL:");
-  //console.log(whereSql);
-  //console.log("Params:");
-  //console.log(params);
-  //console.log("===========================================");
+  console.log("========== ACTIVE LISTING SEARCH ==========");
+  console.log("Filters:", filters);
+  console.log("WHERE SQL:");
+  console.log(whereSql);
+  console.log("Params:");
+  console.log(params);
+  console.log("===========================================");
 
   const listingsSql = `
     SELECT
@@ -97,10 +97,10 @@ export async function searchActiveListings(
     query<ListingRow>(listingsSql, [...params, safeLimit, offset]),
     query<{ total: number }>(countSql, params),
   ]);
-  //console.log("===========================================");
-  //console.log("countRows:");
-  //console.log(countRows);
-  //console.log("===========================================");
+  console.log("===========================================");
+  console.log("countRows:");
+  console.log(countRows);
+  console.log("===========================================");
   return {
     page: safePage,
     limit: safeLimit,

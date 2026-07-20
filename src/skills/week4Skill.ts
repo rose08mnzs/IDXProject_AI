@@ -13,24 +13,13 @@ import type {
 type AwaitingPrompt = Exclude<AwaitingField, null>;
 type ActiveSearchResult = Awaited<ReturnType<typeof searchActiveListings>>;
 
+
 function extractUserText(message: string): string {
   const wrapped = message.match(/\):\s*(.*)$/s);
   return (wrapped?.[1] ?? message).trim();
 }
 
-function parseMoney(text: string): number | null {
-  const cleaned = text.trim().toLowerCase().replace(/,/g, "");
-  const match = cleaned.match(/(\d+(?:\.\d+)?)(k|m)?/i);
-  if (!match) return null;
 
-  let value = Number(match[1]);
-  const suffix = match[2]?.toLowerCase();
-
-  if (suffix === "k") value *= 1_000;
-  if (suffix === "m") value *= 1_000_000;
-
-  return Number.isFinite(value) ? Math.round(value) : null;
-}
 
 function parseNumber(text: string): number | null {
   const match = text.match(/(\d+(?:\.\d+)?)/);
@@ -40,20 +29,6 @@ function parseNumber(text: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function parseType(text: string): string | null {
-  const lower = text.toLowerCase();
-
-  if (lower.includes("single family")) return "SingleFamilyResidence";
-  if (lower.includes("condo")) return "Condominium";
-  if (lower.includes("townhome") || lower.includes("town house") || lower.includes("townhouse")) {
-    return "Townhouse";
-  }
-  if (lower.includes("duplex")) return "Duplex";
-  if (lower.includes("land")) return "UnimprovedLand";
-  if (lower.includes("manufactured") || lower.includes("mobile")) return "ManufacturedHome";
-
-  return null;
-}
 function isNoPreference(text: string): boolean {
   return /^(any|no preference|doesn't matter|doesnt matter|dont care|either|flexible|whatever|nope)$/i.test(
     text.trim()
@@ -145,14 +120,15 @@ function describeFilters(filters: PropertyFilters): string {
   return parts.filter((v): v is string => Boolean(v)).join(", ");
 }
 
-function refineFromFollowUp(session: UserSession, message: string): UserSession {
+function refineFromFollowUp(session: UserSession,parsed: PropertyFilters, message: string): UserSession {
+  
   const trimmed = message.trim();
 
   switch (session.awaiting) {
     case "city":
       return {
         ...session,
-        city: trimmed || null,
+        city: (parsed.city ?? trimmed)|| null,
         awaiting: null,
       };
 
@@ -168,7 +144,7 @@ function refineFromFollowUp(session: UserSession, message: string): UserSession 
 
       return {
         ...session,
-        maxPrice: parseMoney(trimmed),
+        maxPrice: (parsed.maxPrice ?? parseNumber(trimmed)),
         priceAnswered: true,
         awaiting: null,
       };
@@ -185,7 +161,7 @@ function refineFromFollowUp(session: UserSession, message: string): UserSession 
 
       return {
         ...session,
-        beds: parseNumber(trimmed),
+        beds: (parsed.beds ??  parseNumber(trimmed)),
         bedsAnswered: true,
         awaiting: null,
       };
@@ -202,7 +178,7 @@ function refineFromFollowUp(session: UserSession, message: string): UserSession 
 
       return {
         ...session,
-        baths: parseNumber(trimmed),
+        baths: (parsed.baths ?? parseNumber(trimmed)),
         bathsAnswered: true,
         awaiting: null,
       };
@@ -219,7 +195,7 @@ function refineFromFollowUp(session: UserSession, message: string): UserSession 
 
       return {
         ...session,
-        type: parseType(trimmed),
+        type: parsed.type,
         typeAnswered: true,
         awaiting: null,
       };
@@ -281,7 +257,8 @@ export async function handleWeek4Conversation(
   const userText = extractUserText(message);
   const trimmed = userText;
   const lower = trimmed.toLowerCase();
-
+  
+  const parsed = await parsePropertyQuery(userText);
   if (lower === "reset" || lower === "start over" || lower === "/reset") {
     //clearSession(userId);
     resetSession(userId);
@@ -291,12 +268,12 @@ export async function handleWeek4Conversation(
   const existingSession = normalizeSession(getSession(userId));
   let session = existingSession;
 
-  const parsed = await parsePropertyQuery(userText);
   
   const wasAwaiting = Boolean(session.awaiting);
   if (session.awaiting) {
-      session = normalizeSession(refineFromFollowUp(session, trimmed));
+      session = normalizeSession(refineFromFollowUp(session,parsed, trimmed));
   }
+  
   const isNewSearch =
     !wasAwaiting &&
     (
