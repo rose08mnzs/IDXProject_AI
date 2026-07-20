@@ -281,12 +281,18 @@ export async function getReplyFromConfig(
   const finalized = resolverTiming.measureSync("reply.finalize_context", () =>
     finalizeInboundContext(ctx),
   );
- 
+ console.log("From:", finalized.From);
+console.log("To:", finalized.To);
+console.log("Body:", finalized.Body);
+console.log("RawBody:", finalized.RawBody);
+console.log("Provider:", finalized.Provider);
+console.log("OriginatingChannel:", finalized.OriginatingChannel);
   const propertyReply = await tryPropertySearch(
-      finalized.Body ??
-      finalized.RawBody ??
-      finalized.CommandBody ??
-      ""
+        finalized.RawBody ??
+        finalized.Body ??
+        finalized.CommandBody ??
+        "",
+        finalized.From ?? "whatsapp-user"
   );
 
   if (propertyReply) {

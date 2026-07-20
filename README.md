@@ -15,15 +15,19 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
     - Week_1_IDX_Internship_AI.md
     - Week_2_IDX_Internship_AI.md
     - Week_3_IDX_Internship_AI.md
+    - Week_4_IDX_Internship_AI.md
   - src/
     - config/
         - db.ts
       - services/
         - listings.ts
         - format.ts
+      - session/
+        - sessionManager.ts
       - skills/
         - week3Skill.ts
         - propertySearchSkill.ts
+        - week4Skill.ts
       - parser/
         - propertyParser.ts
       - types/
@@ -33,6 +37,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - propertyParser.test.ts
         - week3Search.test.ts
         - testSearch.test.ts
+        - testWeek4Conversation.test.ts
     - OpenClaw
       - src/
         - idx/
@@ -45,12 +50,14 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
   - README.md
 
 ## Current status
-- Week 3 completed
+- Week 4 completed
 - OpenClaw running locally
 - MySQL database created and imported
 - WhatsApp channel linked and tested
 - Natural language property search parser implemented
 - MLS Database Integration implemented
+- Conversational Property Search Agent Implemented
+- Per-user session memory Implemented 
 
 ## Roadmap
 - Week 0: Environment Setup

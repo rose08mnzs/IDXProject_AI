@@ -14,7 +14,7 @@ function buildWhereClause(filters: PropertyFilters) {
   const params: any[] = [];
 
   if (filters.city) {
-    sql += " AND L_City = ? ";
+    sql += " AND LOWER(L_City)=LOWER(?) ";
     params.push(filters.city);
   }
   if (filters.maxPrice) {
@@ -64,6 +64,14 @@ export async function searchActiveListings(
 
   const { sql: whereSql, params } = buildWhereClause(filters);
 
+  //console.log("========== ACTIVE LISTING SEARCH ==========");
+  //console.log("Filters:", filters);
+  //console.log("WHERE SQL:");
+  //console.log(whereSql);
+  //console.log("Params:");
+  //console.log(params);
+  //console.log("===========================================");
+
   const listingsSql = `
     SELECT
       L_ListingID, L_DisplayId, L_Address, L_City, L_Zip,
@@ -89,7 +97,10 @@ export async function searchActiveListings(
     query<ListingRow>(listingsSql, [...params, safeLimit, offset]),
     query<{ total: number }>(countSql, params),
   ]);
-
+  //console.log("===========================================");
+  //console.log("countRows:");
+  //console.log(countRows);
+  //console.log("===========================================");
   return {
     page: safePage,
     limit: safeLimit,

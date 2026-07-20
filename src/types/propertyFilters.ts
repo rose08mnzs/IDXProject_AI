@@ -1,3 +1,55 @@
+export type AwaitingField =
+  | "city"
+  | "budget"
+  | "beds"
+  | "baths"
+  | "type"
+  | null;
+
+export interface UserSession {
+  city: string | null;
+  maxPrice: number | null;
+  beds: number | null;
+  baths: number | null;
+  sqft: number | null;
+  type: string | null;
+  pool: "True" | null;
+  hasView: "True" | null;
+  maxHoa: number | null;
+
+  awaiting: AwaitingField;
+  step: number;
+
+  lastResults: ListingRow[];
+
+  updatedAt: number;
+  priceAnswered: boolean;
+  bedsAnswered: boolean;
+  bathsAnswered: boolean;
+  typeAnswered: boolean;
+}
+
+export function createEmptySession(): UserSession {
+  return {
+    city: null,
+    maxPrice: null,
+    beds: null,
+    baths: null,
+    sqft: null,
+    type: null,
+    pool: null,
+    hasView: null,
+    maxHoa: null,
+
+    awaiting: null,
+    step: 0,
+
+    lastResults: [],
+
+    updatedAt: Date.now(),
+  };
+}
+
 export interface PropertyFilters {
   city: string | null;
   maxPrice: number | null;
