@@ -51,14 +51,15 @@ function firstMatch(patterns: RegExp[], text: string): RegExpMatchArray | null {
 
 function extractCity(query: string): string | null {
   const patterns = [
-    /\b(?:in|near|around|at|within)\s+(?:the\s+)?([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[.,;]|$)/i,
-    /\b(?:located in|based in)\s+([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[.,;]|$)/i,
+    /\b(?:in|near|around|at|within)\s+(?:the\s+)?([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[?.!,;]|$)/i,
+    /\b(?:located in|based in)\s+([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[?.!,;]|$)/i,
   ];
 
   const match = firstMatch(patterns, query);
   if (!match?.[1]) return null;
 
   const city = match[1].trim();
+  //console.log("extractCity DEBUG:", { query, match , city});
   return city.length ? city : null;
 }
 
@@ -121,13 +122,27 @@ function extractBooleanFlag(query: string, word: string): "True" | null {
   if (positive.test(query) && !negative.test(query)) return "True";
   return null;
 }
+function extractMonths(query: string): number {
+  const match = query.match(
+    /(?:past|last|over the last|for the last|in the last)\s+(\d{1,2})\s+months?/i
+  );
+  if (!match?.[1]) return 12;
+  const months = Number(match[1]);
+  return Number.isFinite(months) ? Math.min(Math.max(months, 1), 60) : 12;
+}
 
+function extractZip(query: string): string | null {
+  const match = query.match(/\b\d{5}\b/);
+  return match?.[0] ?? null;
+}
 export async function parsePropertyQuery(query: string): Promise<PropertyFilters> {
   const normalized = normalizeQuery(query);
 
   return {
     ...createEmptyPropertyFilters(),
     city: extractCity(normalized),
+    zip: extractZip(normalized),
+    months: extractMonths(normalized),
     maxPrice: extractPrice(normalized),
     beds: extractBeds(normalized),
     baths: extractBaths(normalized),

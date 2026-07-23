@@ -6,6 +6,8 @@ export type AwaitingField =
   | "type"
   | null;
 
+
+export type MarketAwaitingField = "city" | null;
 export interface UserSession {
   city: string | null;
   maxPrice: number | null;
@@ -27,6 +29,12 @@ export interface UserSession {
   bedsAnswered: boolean;
   bathsAnswered: boolean;
   typeAnswered: boolean;
+
+  marketAwaiting?: MarketAwaitingField;
+  marketCity?: string | null;
+  marketZip?: string | null;
+  marketPropertyType?: string | null;
+  marketMonths?: number | null;
 }
 
 export function createEmptySession(): UserSession {
@@ -47,6 +55,12 @@ export function createEmptySession(): UserSession {
     lastResults: [],
 
     updatedAt: Date.now(),
+
+    marketAwaiting: null,
+    marketCity: null,
+    marketZip: null,
+    marketPropertyType: null,
+    marketMonths: null,
   };
 }
 

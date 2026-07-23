@@ -20,7 +20,41 @@ function extractUserText(message: string): string {
 }
 
 
+function parseMoney(text: string): number | null {
+  const cleaned = text
+    .trim()
+    .toLowerCase()
+    .replace(/\$/g, "")
+    .replace(/,/g, "");
 
+  const match = cleaned.match(/^(\d+(?:\.\d+)?)\s*([km])?$/i);
+
+  if (!match) return null;
+
+  let value = Number(match[1]);
+
+  if (Number.isNaN(value)) return null;
+
+   switch (match[2]?.toLowerCase()) {
+    case "k":
+    case "thousand":
+      value *= 1_000;
+      break;
+
+    case "m":
+    case "million":
+      value *= 1_000_000;
+      break;
+
+    case "b":
+    case "billion":
+      value *= 1_000_000_000;
+      break;
+  }
+
+
+  return Math.round(value);
+}
 function parseNumber(text: string): number | null {
   const match = text.match(/(\d+(?:\.\d+)?)/);
   if (!match) return null;
@@ -144,7 +178,7 @@ function refineFromFollowUp(session: UserSession,parsed: PropertyFilters, messag
 
       return {
         ...session,
-        maxPrice: (parsed.maxPrice ?? parseNumber(trimmed)),
+        maxPrice: parseMoney(trimmed),//(parsed.maxPrice ?? parseNumber(trimmed)),
         priceAnswered: true,
         awaiting: null,
       };

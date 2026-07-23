@@ -26,3 +26,16 @@ export function clearSession(userId: string) {
 export function resetSession(userId: string) {
     sessions.set(userId, createEmptySession());
 }
+export function clearMarketSession(userId: string) {
+  const current = getSession(userId);
+
+  sessions.set(userId, {
+    ...current,
+    marketAwaiting: null,
+    marketCity: null,
+    marketZip: null,
+    marketPropertyType: null,
+    marketMonths: null,
+    updatedAt: Date.now(),
+  });
+}

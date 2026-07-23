@@ -8,6 +8,7 @@
     "test:week2": "tsx src/tests/propertyParser.test.ts",
     "test:week3": "tsx src/tests/testDb.test.ts && tsx src/tests/testSearch.test.ts && tsx src/tests/testWeek3Skill.test.ts",
     "test:week4": "tsx src/tests/testWeek4Conversation.test.ts",
+    "test:week5": "tsx src/tests/testWeek5MarketAnalytics.test.ts",
     "dev:api": "tsx src/server.ts"
   },
   "dependencies": {

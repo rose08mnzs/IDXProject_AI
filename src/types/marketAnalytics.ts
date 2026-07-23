@@ -1,8 +1,8 @@
 export interface MarketFilters {
-  city?: string | null;
-  zip?: string | null;
-  propertyType?: string | null;
-  months?: number;
+  city: string | null;
+  zip: string | null;
+  propertyType: string | null;
+  months: number;
 }
 
 export interface MarketSummary {
@@ -16,7 +16,7 @@ export interface MarketSummary {
 }
 
 export interface MonthlyTrendRow {
-  month: string; // YYYY-MM
+  month: string;
   sales: number;
   avgClosePrice: number | null;
   avgPricePerSqft: number | null;
