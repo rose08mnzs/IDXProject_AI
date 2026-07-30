@@ -74,7 +74,7 @@ export async function searchActiveListings(
 
   const listingsSql = `
     SELECT
-      L_ListingID, L_DisplayId, L_Address, L_City, L_Zip,
+      L_ListingID, L_DisplayId, L_Address, L_City, L_Zip, L_Remarks,
       L_SystemPrice AS price, L_Keyword2 AS beds, LM_Dec_3 AS baths,
       LM_Int2_3 AS sqft, L_Type_ AS type, L_Status AS status,
       LMD_MP_Latitude AS lat, LMD_MP_Longitude AS lng,

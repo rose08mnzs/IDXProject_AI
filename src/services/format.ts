@@ -1,5 +1,9 @@
 import type { ListingRow, SoldRow } from "../types/propertyFilters";
 
+export type DisplayListingRow = ListingRow & {
+  score?: number;
+};
+
 export function formatListingCard(listing: ListingRow): string {
   const address = listing.L_Address ?? "Unknown address";
   const city = listing.L_City ?? "";
@@ -11,11 +15,24 @@ export function formatListingCard(listing: ListingRow): string {
   const dom = listing.DaysOnMarket ?? "N/A";
   const photos = listing.PhotoCount ?? 0;
 
-  return [
+  const lines = [
     `🏠 ${address}${city ? `, ${city}` : ""}`,
     `💰 ${price} | 🛏 ${beds} bd | 🛁 ${baths} ba | 📐 ${sqft}`,
-    `🏡 ${hoa} | 📅 ${dom} DOM | 📷 ${photos} photos`,
-  ].join("\n");
+    `🏡 ${hoa} | 📅 ${dom} DOM `,
+  ];
+
+  if (typeof listing.score === "number") {
+    lines.push(`🏷 ${listing.type ?? "Unknown"} | Match ${(listing.score * 100).toFixed(1)}%`);
+  }
+
+  if (listing.L_Remarks) {
+    const remarks = `${listing.L_Remarks.slice(0, 180).replace(/\s+/g, " ")}${
+      listing.L_Remarks.length > 180 ? "…" : ""
+    }`;
+    lines.push(`📝 ${remarks}`);
+  }
+
+  return lines.join("\n");
 }
 
 export function formatSearchResults(listings: ListingRow[], page: number, totalHint: number): string {

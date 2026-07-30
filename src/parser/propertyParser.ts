@@ -48,7 +48,6 @@ function firstMatch(patterns: RegExp[], text: string): RegExpMatchArray | null {
   }
   return null;
 }
-
 function extractCity(query: string): string | null {
   const patterns = [
     /\b(?:in|near|around|at|within)\s+(?:the\s+)?([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[?.!,;]|$)/i,
@@ -58,10 +57,36 @@ function extractCity(query: string): string | null {
   const match = firstMatch(patterns, query);
   if (!match?.[1]) return null;
 
-  const city = match[1].trim();
-  //console.log("extractCity DEBUG:", { query, match , city});
-  return city.length ? city : null;
+  const city = match[1].trim().replace(/^(?:a|an|the)\s+/i, "").trim();
+
+  const genericCity = /^(?:tree[-\s]?lined\s+neighborhood|neighborhood|area|community|district|region|street|block|vicinity|suburb|suburbs|downtown|uptown|midtown|coast|beach|beachfront|waterfront|mountain|mountains|hill|hills)$/i;
+
+  if (!city || genericCity.test(city)) return null;
+  if (city.split(/\s+/).length > 3) return null;
+
+  return city;
 }
+// function extractCity(query: string): string | null {
+//   const patterns = [
+//     /\b(?:in|near|around|at|within)\s+(?:the\s+)?([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[?.!,;]|$)/i,
+//     /\b(?:located in|based in)\s+([a-z][a-z\s'.-]+?)(?=\s+(?:under|below|less than|over|above|with|featuring|having|max(?:imum)?|min(?:imum)?|between|from|to|for|on|and)\b|[?.!,;]|$)/i,
+//   ];
+
+//   const match = firstMatch(patterns, query);
+//   if (!match?.[1]) return null;
+
+//   let city = match[1].trim();
+//   city = city.replace(/^(?:a|an|the)\s+/i, "").trim();
+
+//   const genericLocationWords =
+//     /\b(neighborhood|area|community|district|region|street|block|vicinity|suburb|suburbs|downtown|uptown|midtown|coast|beachfront|waterfront|mountain|mountains|hill|hills)\b/i;
+
+//   if (!city || genericLocationWords.test(city)) return null;
+
+//   if (city.split(/\s+/).length > 4) return null;
+
+//   return city;
+// }
 
 function extractPrice(query: string): number | null {
   const patterns = [

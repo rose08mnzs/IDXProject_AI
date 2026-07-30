@@ -10,6 +10,7 @@ export type AwaitingField =
 export type MarketAwaitingField = "city" | null;
 export interface UserSession {
   city: string | null;
+  zip: string | null;
   maxPrice: number | null;
   beds: number | null;
   baths: number | null;
@@ -25,6 +26,7 @@ export interface UserSession {
   lastResults: ListingRow[];
 
   updatedAt: number;
+  cityAnswered: boolean;
   priceAnswered: boolean;
   bedsAnswered: boolean;
   bathsAnswered: boolean;
@@ -35,11 +37,15 @@ export interface UserSession {
   marketZip?: string | null;
   marketPropertyType?: string | null;
   marketMonths?: number | null;
+
+  semanticHint?: string | null;
+  searchMode?: "structured" | "semantic" | null;
 }
 
 export function createEmptySession(): UserSession {
   return {
     city: null,
+    zip: null,
     maxPrice: null,
     beds: null,
     baths: null,
@@ -56,16 +62,27 @@ export function createEmptySession(): UserSession {
 
     updatedAt: Date.now(),
 
+    cityAnswered: false,
+    priceAnswered: false,
+    bedsAnswered: false,
+    bathsAnswered: false,
+    typeAnswered: false,
+
     marketAwaiting: null,
     marketCity: null,
     marketZip: null,
     marketPropertyType: null,
     marketMonths: null,
+    
+    semanticHint: null,
+    searchMode: null,
   };
 }
 
 export interface PropertyFilters {
   city: string | null;
+  zip: string | null;
+  months: number;
   maxPrice: number | null;
   beds: number | null;
   baths: number | null;
@@ -82,6 +99,7 @@ export interface ListingRow  {
   L_Address: string;
   L_City: string;
   L_Zip: string;
+  L_Remarks: string | null;
   price: number;
   beds: number;
   baths: number;
@@ -126,6 +144,8 @@ export interface SoldRow {
 export function createEmptyPropertyFilters(): PropertyFilters {
   return {
     city: null,
+    zip: null,
+    months: 12,
     maxPrice: null,
     beds: null,
     baths: null,

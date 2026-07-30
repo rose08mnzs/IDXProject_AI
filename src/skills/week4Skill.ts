@@ -2,6 +2,7 @@ import { parsePropertyQuery } from "../parser/propertyParser";
 import { searchActiveListings, getSoldComps } from "../services/listings";
 import { formatSearchResults, formatSoldCompCard } from "../services/format";
 import { clearSession, getSession, updateSession, resetSession } from "../session/sessionManager";
+import { rerankListings } from "../services/semanticSearch";
 
 import type {
   AwaitingField,
@@ -84,17 +85,22 @@ function normalizeSession(session: UserSession): UserSession {
     awaiting: session.awaiting ?? null,
     lastResults: session.lastResults ?? [],
     updatedAt: session.updatedAt ?? Date.now(),
+
+    cityAnswered: session.cityAnswered ?? false,
     priceAnswered: session.priceAnswered ?? false,
     bedsAnswered: session.bedsAnswered ?? false,
     bathsAnswered: session.bathsAnswered ?? false,
     typeAnswered: session.typeAnswered ?? false,
+
+    semanticHint: session.semanticHint ?? null,
+    searchMode: session.searchMode ?? null,
   };
 }
 
 function promptFor(field: AwaitingPrompt): string {
   switch (field) {
     case "city":
-      return "Which city are you interested in?";
+      return "Which city are you interested in? (Or reply 'any')";
     case "budget":
       return "What is your maximum budget?  (Or reply 'any')";
     case "beds":
@@ -107,7 +113,7 @@ function promptFor(field: AwaitingPrompt): string {
 }
 
 function nextMissingField(session: UserSession): AwaitingField {
-    if (!session.city)
+    if (/*!session.city && !session.zip*/ !session.cityAnswered)
           return "city";
 
     if (!session.priceAnswered)
@@ -128,6 +134,8 @@ function nextMissingField(session: UserSession): AwaitingField {
 function toSearchFilters(session: UserSession): PropertyFilters {
   return {
     city: session.city ?? null,
+    zip: session.zip ?? null,
+    //months: 12,
     maxPrice: session.maxPrice ?? null,
     beds: session.beds ?? null,
     baths: session.baths ?? null,
@@ -142,6 +150,7 @@ function toSearchFilters(session: UserSession): PropertyFilters {
 function describeFilters(filters: PropertyFilters): string {
   const parts = [
     filters.city ? `city=${filters.city}` : null,
+    filters.zip ? `zip=${filters.zip}` : null,
     filters.maxPrice ? `maxPrice=${filters.maxPrice}` : null,
     filters.beds ? `beds=${filters.beds}` : null,
     filters.baths ? `baths=${filters.baths}` : null,
@@ -160,9 +169,21 @@ function refineFromFollowUp(session: UserSession,parsed: PropertyFilters, messag
 
   switch (session.awaiting) {
     case "city":
+      if (isNoPreference(trimmed)) {
+        return {
+          ...session,
+          city: null,
+          zip: null,
+          cityAnswered: true,
+          awaiting: null,
+        };
+      }
+      
       return {
         ...session,
         city: (parsed.city ?? trimmed)|| null,
+        zip: parsed.zip ?? session.zip,
+        cityAnswered: true,
         awaiting: null,
       };
 
@@ -255,11 +276,28 @@ function refineWithKeywords(session: UserSession, message: string): UserSession 
     updated.pool = "True";
   }
 
-  if (text.includes("view")) {
+  /*if (text.includes("view")) {
     updated.hasView = "True";
-  }
+  }*/
 
   return updated;
+}
+//new 
+function isSemanticStyleQuery(text: string): boolean {
+  const semanticWords =
+    /\b(charming|cozy|luxury|modern|updated|renovated|character|craftsman|mid-century|light-filled|bright|airy|spacious|elegant|stylish|private|serene|unique|dream home|open concept|open floor plan|quiet|peaceful|tree[-\s]?lined|neighborhood|natural light|mountain views?|ocean views?|beach|resort|retreat|entertaining|backyard|starter home|low maintenance|investment|fixer upper|villa|turnkey)\b/i;
+
+  const structuredSignals =
+    /(\d+\s*(?:bed|bath|br|bd)|\bunder\b|\$\d|hoa|max\s*hoa|sqft|square feet|\bpool\b)/i;
+
+  return semanticWords.test(text) && !structuredSignals.test(text);
+}
+
+function extractSemanticHint(text: string): string | null {
+  const semanticWords =
+    /\b(charming|cozy|luxury|modern|updated|renovated|character|craftsman|mid-century|light-filled|bright|airy|spacious|elegant|stylish|private|serene|unique|dream home|open concept|open floor plan|quiet|peaceful|tree[-\s]?lined|neighborhood|natural light|mountain views?|ocean views?|beach|resort|retreat|entertaining|backyard|starter home|low maintenance|investment|fixer upper|villa|turnkey)\b/i;
+
+  return semanticWords.test(text) ? text : null;
 }
 
 async function searchWithFallbacks(filters: PropertyFilters): Promise<{
@@ -272,10 +310,11 @@ async function searchWithFallbacks(filters: PropertyFilters): Promise<{
     { ...filters, baths: null, type: null },
     { ...filters, baths: null, type: null, beds: null },
     { ...filters, baths: null, type: null, beds: null, sqft: null, maxHoa: null },
+    { ...filters, baths: null, type: null, beds: null, sqft: null, maxHoa: null, hasView: null, pool: null },
   ];
 
   for (const attempt of attempts) {
-    const result = await searchActiveListings(attempt, 1, 5);
+    const result = await searchActiveListings(attempt, 1, 200);
     if (result.listings.length > 0) {
       return { result, usedFilters: attempt };
     }
@@ -283,7 +322,33 @@ async function searchWithFallbacks(filters: PropertyFilters): Promise<{
 
   return { result: null, usedFilters: filters };
 }
+function startFreshSemanticSearch(session: UserSession, semanticText: string,  parsed: PropertyFilters): UserSession {
+  return {
+    ...session,
+    semanticHint: semanticText,
+    searchMode: "semantic",
 
+    city: parsed.city ?? null,
+    zip: parsed.zip ?? null,
+    maxPrice: parsed.maxPrice ?? null,
+    beds: parsed.beds ?? null,
+    baths: parsed.baths ?? null,
+    sqft: parsed.sqft ?? null,
+    type: parsed.type ?? null,
+    pool: parsed.pool ?? null,
+    hasView: parsed.hasView ?? null,
+    maxHoa: parsed.maxHoa ?? null,
+
+    cityAnswered: parsed.city !== null || parsed.zip !== null,
+    priceAnswered: parsed.maxPrice !== null,
+    bedsAnswered: parsed.beds !== null,
+    bathsAnswered: parsed.baths !== null,
+    typeAnswered: parsed.type !== null,
+
+    awaiting: null,
+    lastResults: [],
+  };
+}
 export async function handleWeek4Conversation(
   userId: string,
   message: string,
@@ -302,21 +367,65 @@ export async function handleWeek4Conversation(
   const existingSession = normalizeSession(getSession(userId));
   let session = existingSession;
 
+  // const isSemantic = isSemanticStyleQuery(userText);
+  // const hasHardFilters =
+  //   Boolean(parsed.city ||
+  //           parsed.zip ||
+  //           parsed.maxPrice ||
+  //           parsed.beds ||
+  //           parsed.baths ||
+  //           parsed.sqft ||
+  //           parsed.maxHoa);
+
+  //if (isSemantic && !hasHardFilters) {
+    //session.semanticHint = userText ?? session.semanticHint;
+    //session.searchMode = "semantic";
+   // session = startFreshSemanticSearch(session, userText, parsed);
+    // updateSession(userId, {
+    //   ...session,
+    //   awaiting: "city",
+    //   updatedAt: Date.now(),
+    // });
+    // return "Which city are you interested in? (Or reply 'any')";
+    //}
+    const wasAwaiting = Boolean(session.awaiting);
+    if (session.awaiting) {
+        session = normalizeSession(refineFromFollowUp(session,parsed, trimmed));
+    }
+
+    const semanticHint = extractSemanticHint(userText);
+    // Only replace the hint if this message actually contains one.
+    if (semanticHint) {
+        session.semanticHint = semanticHint;
+    }
+    session.searchMode = session.semanticHint ? "semantic" : "structured";
+    // if (isSemantic) {
+    //     session.semanticHint = userText;
+    //     session.searchMode = "semantic";
+    // }
+    // else {
+    //     session.semanticHint = null;
+    //     session.searchMode = "structured";
+    // }
+
+
   
-  const wasAwaiting = Boolean(session.awaiting);
-  if (session.awaiting) {
-      session = normalizeSession(refineFromFollowUp(session,parsed, trimmed));
-  }
   
   const isNewSearch =
     !wasAwaiting &&
     (
       parsed.city !== null ||
+      parsed.zip !== null ||
       parsed.maxPrice !== null ||
       parsed.beds !== null ||
       parsed.baths !== null ||
       parsed.type !== null
     );
+
+  // if (isNewSearch && !isSemantic) {
+  //   session.semanticHint = null;
+  //   session.searchMode = "structured";
+  // }
 
   if (isNewSearch) {
     // Clear optional filters from any previous search
@@ -326,10 +435,12 @@ export async function handleWeek4Conversation(
     session.maxHoa = null;
 
     // Reset answered flags for required fields
-    session.priceAnswered = false;
-    session.bedsAnswered = false;
-    session.bathsAnswered = false;
-    session.typeAnswered = false;
+    session.cityAnswered = parsed.city !== null || parsed.zip !== null ? true : session.cityAnswered;
+    session.priceAnswered = parsed.maxPrice !== null ? true : session.priceAnswered;
+    session.bedsAnswered = parsed.beds !== null ? true : session.bedsAnswered;
+    session.bathsAnswered = parsed.baths !== null ? true : session.bathsAnswered;
+    session.typeAnswered = parsed.type !== null ? true : session.typeAnswered;
+
 
     // Also clear any previous search results
     session.lastResults = [];
@@ -338,6 +449,7 @@ export async function handleWeek4Conversation(
   session = normalizeSession({
     ...session,
     city: parsed.city ?? session.city,
+     zip: parsed.zip ?? session.zip,
     maxPrice: parsed.maxPrice ?? session.maxPrice,
     beds: parsed.beds ?? session.beds,
     baths: parsed.baths ?? session.baths,
@@ -346,12 +458,13 @@ export async function handleWeek4Conversation(
     pool: parsed.pool ?? session.pool,
     hasView: parsed.hasView ?? session.hasView,
     maxHoa: parsed.maxHoa ?? session.maxHoa,
-
+    
+    cityAnswered: parsed.city !== null || parsed.zip !== null ? true : session.cityAnswered,
     priceAnswered: parsed.maxPrice !== null ? true : session.priceAnswered,
     bedsAnswered: parsed.beds !== null ? true : session.bedsAnswered,
     bathsAnswered: parsed.baths !== null ? true : session.bathsAnswered,
     typeAnswered: parsed.type !== null ? true : session.typeAnswered,
-
+    
 
     awaiting: null,
     step: (session.step ?? 0) + 1,
@@ -387,17 +500,27 @@ export async function handleWeek4Conversation(
 
     return `I could not find matching homes for ${session.city ?? "your search"}. Try widening the budget or removing one filter.`;
   }
+  console.log("Semantic Hint:", session.semanticHint);
+  const rankedListings = await rerankListings(result.listings, session.semanticHint );
 
+  console.log("Candidates:", result.listings.length);
+  const finalResult = {
+      ...result,
+      listings: rankedListings.slice(0, 5),
+  };
   updateSession(userId, {
     ...session,
     awaiting: null,
-    lastResults: result.listings,
+    lastResults: finalResult.listings,
     updatedAt: Date.now(),
   });
 
   let response = `Here are your top matches using ${describeFilters(usedFilters)}:\n\n`;
-  response += formatSearchResults(result.listings, result.page, result.totalHint);
+  response += formatSearchResults(finalResult.listings, finalResult.page, finalResult.totalHint);
 
+  if (session.semanticHint) {
+    response += `\n\nSemantic preference noted: "${session.semanticHint}"`;
+  }
   if (soldComps.length > 0) {
     response += "\n\nRecent sold comps:\n\n";
     response += soldComps.slice(0, 3).map(formatSoldCompCard).join("\n\n");
