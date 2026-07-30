@@ -1,15 +1,29 @@
 import { parsePropertyQuery } from "../../../IDXProject_AI/src/parser/propertyParser";
 import { handleWeek3Search } from "../../../IDXProject_AI/src/skills/week3Skill";
 import { handleWeek4Conversation } from "../../../IDXProject_AI/src/skills/week4Skill";
-import { getSession,updateSession,resetSession } from "../../../IDXProject_AI/src/session/sessionManager";
+import { getSession,updateSession,resetSession,clearMarketSession } from "../../../IDXProject_AI/src/session/sessionManager";
 import { week5Skill } from "../../../IDXProject_AI/src/skills/week5Skill";
-function looksLikePropertySearch(text: string) {
-    return /(bed(room)?|bath|condo|house|townhome|single family|home|property|price|under|\$|\d+\s*br|pool|view|budget)/i.test(text);
+//import { week6Skill } from "../../../IDXProject_AI/src/skills/week6Skill";
+
+function looksLikeSemanticQuery(text: string): boolean {
+  const semanticWords =
+    /\b(charming|cozy|luxury|modern|updated|renovated|character|craftsman|mid-century|light-filled|bright|airy|spacious|elegant|stylish|private|serene|unique|dream home|open concept|open floor plan|quiet|peaceful|tree[-\s]?lined|neighborhood|natural light|mountain views?|ocean views?|beach|resort|retreat|entertaining|backyard|starter home|low maintenance|investment|fixer upper|villa|turnkey)\b/i;
+
+  // Keep this simple. Do NOT block on "in a ..." because phrases like
+  // "in a tree-lined neighborhood" are common semantic queries.
+  const structuredSignals =
+    /(\d+\s*(?:bed|bath|br|bd)|\bunder\b|\$\d|hoa|max\s*hoa|sqft|square feet|\bpool\b|\bview\b)/i;
+
+  return semanticWords.test(text) /*&& !structuredSignals.test(text)*/;
 }
 function isMarketQuery(text: string): boolean {
   return /\b(market|analytics|trend|trends|days on market|dom|price per sqft|list-to-close|good time to buy|market stats?)\b/i.test(
     text
   );
+}
+
+function looksLikePropertySearch(text: string): boolean {
+  return /(bed(room)?|bath|condo|house|townhome|single family|home|property|price|under|\$|\d+\s*br|pool|view|budget)/i.test(text);
 }
 
 function hasActiveConversation(userId: string) {
@@ -28,8 +42,19 @@ function isResetMarketCommand(text: string) {
   const lower = text.trim().toLowerCase();
   return lower === "resetmarket" || lower === "start over market" || lower === "/resetm";
 }
-
-function isAssistantGeneratedText(text: string): boolean {
+function hasStructuredFilters(
+  parsed: Awaited<ReturnType<typeof parsePropertyQuery>>
+): boolean {
+  return Boolean(
+    parsed.city ||
+      parsed.maxPrice ||
+      parsed.beds ||
+      parsed.baths ||
+      parsed.sqft ||
+      parsed.maxHoa
+  );
+}
+export function isAssistantGeneratedText(text: string): boolean {
   const t = text.trim().toLowerCase();
 
   return (
@@ -40,7 +65,16 @@ function isAssistantGeneratedText(text: string): boolean {
     t.startsWith("what is your maximum budget?") ||
     t.startsWith("how many bedrooms do you need?") ||
     t.startsWith("how many bathrooms do you need?") ||
-    t.startsWith("do you prefer single family, condo, townhome")
+    t.startsWith("do you prefer single family, condo, townhome") ||
+
+    // NEW
+    t.startsWith("i'm ready to assist with your real estate analysis")||
+    t.startsWith("Conversation cleared.")||
+    t.startsWith("Market analysis cleared")||
+    t.startsWith("I could not find matching") ||
+    t.startsWith("i'm sorry") ||
+    t.startsWith("i'm here") ||
+    t.startsWith("for any real-estate or mls request, call idx_property_search directly.")
   );
 }
 export async function tryPropertySearch(
@@ -60,10 +94,10 @@ export async function tryPropertySearch(
     if (isResetCommand(cleanMessage)) {
         console.log("Resetting session for user:", userId);
         resetSession(userId);
-        updateSession(userId, {
-            awaiting: "city"
-        });
-        return "Conversation cleared. Which city are you interested in?";
+        //updateSession(userId, {
+       //     awaiting: "city"
+        //});
+        return "Conversation cleared.";
     }
     if (isResetMarketCommand(cleanMessage)) {
         console.log("Resetting Market session for user:", userId);
@@ -80,8 +114,25 @@ export async function tryPropertySearch(
         const result = await week5Skill(userId, cleanMessage);
         return result.response;
     }
+    //const parsed = await parsePropertyQuery(cleanMessage);
+    //const structured = hasStructuredFilters(parsed);
+    // const hasSearchConstraints =
+    //     parsed.city ||
+    //     parsed.maxPrice ||
+    //     parsed.beds ||
+    //     parsed.baths ||
+    //     parsed.sqft ||
+    //     parsed.maxHoa;
+    //const hasSearchConstraints = hasStructuredFilters(parsed);
+    //const semantic = looksLikeSemanticQuery(cleanMessage);
 
-    if (!looksLikePropertySearch(cleanMessage) && !hasActiveConversation(userId)){
+    // if (semantic && !hasSearchConstraints) {
+    //     const result = await week6Skill(userId, cleanMessage);
+    //     return result.response;
+    // }
+    const semantic = looksLikeSemanticQuery(cleanMessage);
+    const property = looksLikePropertySearch(cleanMessage);
+    if (!semantic && !property && !hasActiveConversation(userId)){
         return null;
     }
     
