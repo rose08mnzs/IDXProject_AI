@@ -2,6 +2,7 @@ import express from "express";
 import { parsePropertyQuery } from "./parser/propertyParser";
 import { handleWeek3Search } from "./skills/week3Skill";
 import { week5Skill } from "./skills/week5Skill";
+import { week7Skill } from "./skills/week7Skill";
 const app = express();
 app.use(express.json());
 
@@ -48,6 +49,22 @@ app.post("/market-analytics", async (req, res) => {
   } catch (error) {
     console.error("Market analytics API failed:", error);
     return res.status(500).json({ error: "Market analytics failed" });
+  }
+});
+
+app.post("/recommendations", async (req, res) => {
+  try {
+    const { query } = req.body as { query?: string };
+
+    if (!query || typeof query !== "string") {
+      return res.status(400).json({ error: "query is required" });
+    }
+
+    const result = await week7Skill("api-user", query);
+    return res.json(result);
+  } catch (error) {
+    console.error("Recommendation API failed:", error);
+    return res.status(500).json({ error: "Recommendation failed" });
   }
 });
 

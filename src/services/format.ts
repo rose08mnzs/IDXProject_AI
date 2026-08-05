@@ -14,9 +14,10 @@ export function formatListingCard(listing: ListingRow): string {
   const hoa = listing.AssociationFee ? `$${listing.AssociationFee}/mo HOA` : "No HOA data";
   const dom = listing.DaysOnMarket ?? "N/A";
   const photos = listing.PhotoCount ?? 0;
+  const remarks = listing.L_Remarks ?? null;
 
   const lines = [
-    `🏠 ${address}${city ? `, ${city}` : ""}`,
+    `📍 ${address}${city ? `, ${city}` : ""}`,
     `💰 ${price} | 🛏 ${beds} bd | 🛁 ${baths} ba | 📐 ${sqft}`,
     `🏡 ${hoa} | 📅 ${dom} DOM `,
   ];

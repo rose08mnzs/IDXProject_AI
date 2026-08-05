@@ -4,6 +4,7 @@ import { handleWeek4Conversation } from "../../../IDXProject_AI/src/skills/week4
 import { getSession,updateSession,resetSession,clearMarketSession } from "../../../IDXProject_AI/src/session/sessionManager";
 import { week5Skill } from "../../../IDXProject_AI/src/skills/week5Skill";
 //import { week6Skill } from "../../../IDXProject_AI/src/skills/week6Skill";
+import { week7Skill } from "../../../IDXProject_AI/src/skills/week7Skill";
 
 function looksLikeSemanticQuery(text: string): boolean {
   const semanticWords =
@@ -18,6 +19,11 @@ function looksLikeSemanticQuery(text: string): boolean {
 }
 function isMarketQuery(text: string): boolean {
   return /\b(market|analytics|trend|trends|days on market|dom|price per sqft|list-to-close|good time to buy|market stats?)\b/i.test(
+    text
+  );
+}
+function looksLikeRecommendationQuery(text: string): boolean {
+  return /\b(similar|recommend(?:ation)?|comparable|compare|comp[s]?|what else like this|other like this|closest match|best match|like|alternatives?)\b/i.test(
     text
   );
 }
@@ -69,18 +75,21 @@ export function isAssistantGeneratedText(text: string): boolean {
 
     // NEW
     t.startsWith("i'm ready to assist with your real estate analysis")||
-    t.startsWith("Conversation cleared.")||
-    t.startsWith("Market analysis cleared")||
-    t.startsWith("I could not find matching") ||
+    t.startsWith("conversation cleared.")||
+    t.startsWith("market analysis cleared")||
+    t.startsWith("i could not find matching") ||
     t.startsWith("i'm sorry") ||
     t.startsWith("i'm here") ||
+    t.startsWith("i could not build") ||
+    t.startsWith("i could not find enough sold comps") ||
+    t.startsWith("top matches for") ||
     t.startsWith("for any real-estate or mls request, call idx_property_search directly.")
   );
 }
 export async function tryPropertySearch(
     message: string,
     userId = "whatsapp-user"
-) {
+) {try {
    //const cleanMessage =
     //message.match(/\(self\):\s*(.*)$/s)?.[1]?.trim() ??
     //message.trim();
@@ -130,11 +139,30 @@ export async function tryPropertySearch(
     //     const result = await week6Skill(userId, cleanMessage);
     //     return result.response;
     // }
+    if (looksLikeRecommendationQuery(cleanMessage)) {
+      const result = await week7Skill(userId, cleanMessage);
+      return result.response;
+    }
     const semantic = looksLikeSemanticQuery(cleanMessage);
     const property = looksLikePropertySearch(cleanMessage);
     if (!semantic && !property && !hasActiveConversation(userId)){
         return null;
     }
     
-    return await handleWeek4Conversation(userId, cleanMessage);
+    console.log("Routing to Week 4 conversation...");
+    const result = await handleWeek4Conversation(userId, cleanMessage);
+    console.log("Week 4 result:", result);
+    return result;
+} catch (error) {
+    console.error("Inbound error:", error);
+
+    if (error instanceof AggregateError) {
+        console.error("AggregateError details:");
+        for (const err of error.errors) {
+            console.error(err);
+        }
+    }
+
+    throw error;
+}
 }

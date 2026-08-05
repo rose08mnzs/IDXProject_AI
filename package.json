@@ -10,6 +10,7 @@
     "test:week4": "tsx src/tests/testWeek4Conversation.test.ts",
     "test:week5": "tsx src/tests/testWeek5MarketAnalytics.test.ts",
     "test:week6": "tsx src/tests/week6SemanticSearch.test.ts && tsx src/tests/week6embeddings.test.ts",
+    "test:week7": "tsx src/tests/week7Recommendation.test.ts",
     "dev:api": "tsx src/server.ts"
   },
   "dependencies": {
