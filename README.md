@@ -4,6 +4,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 ## Stack
 - OpenClaw
 - Ollama (`qwen3:8b`)
+- Ollama (`nomic-embed-text`)
 - MySQL
 - WhatsApp
 - Python / TypeScript
@@ -18,6 +19,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
     - Week_4_IDX_Internship_AI.md
     - Week_5_IDX_Internship_AI.md
     - Week_6_IDX_Internship_AI.md
+    - Week_7_IDX_Internship_AI.md
   - src/
     - config/
         - db.ts
@@ -27,6 +29,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - marketAnalytics.ts
         - embeddings.ts
         - semanticSearch.ts
+        - recommendation.ts
       - session/
         - sessionManager.ts
       - skills/
@@ -34,6 +37,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - propertySearchSkill.ts
         - week4Skill.ts
         - week5Skill.ts
+        - week7Skill.ts
       - parser/
         - propertyParser.ts
       - types/
@@ -48,6 +52,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - testWeek5MarketAnalytics.test.ts
         - week6embeddings.test.ts
         - week6SemanticSearch.test.ts
+        - week7Recommendation.test.ts
     - OpenClaw
       - src/
         - idx/
@@ -60,7 +65,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
   - README.md
 
 ## Current status
-- Week 6 completed
+- Week 7 completed
 - OpenClaw running locally
 - MySQL database created and imported
 - WhatsApp channel linked and tested
@@ -72,6 +77,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 - Semantic search integrated into Week 4
 - Local embeddings and vector search working with Ollama
 - Embedding cache table implemented for performance
+- Hybrid recommendation engine
 
 ## Roadmap
 - Week 0: Environment Setup
