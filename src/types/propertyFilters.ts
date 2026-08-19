@@ -1,3 +1,10 @@
+
+export type PendingIntent =
+  | "market"
+  | "recommend"
+  | "knowledge"
+  | "email";
+
 export type AwaitingField =
   | "city"
   | "budget"
@@ -40,6 +47,9 @@ export interface UserSession {
 
   semanticHint?: string | null;
   searchMode?: "structured" | "semantic" | null;
+
+  pendingIntents?: PendingIntent[];
+  pendingQuery?: string | null;
 }
 
 export function createEmptySession(): UserSession {
@@ -76,6 +86,9 @@ export function createEmptySession(): UserSession {
     
     semanticHint: null,
     searchMode: null,
+
+    pendingIntents: [],
+    pendingQuery: null,
   };
 }
 

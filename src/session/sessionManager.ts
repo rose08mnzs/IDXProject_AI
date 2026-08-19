@@ -37,5 +37,10 @@ export function clearMarketSession(userId: string) {
     marketPropertyType: null,
     marketMonths: null,
     updatedAt: Date.now(),
+    pendingIntents:
+      (current.pendingIntents ?? []).filter(
+        (intent) => intent !== "market"
+      ),
+
   });
 }

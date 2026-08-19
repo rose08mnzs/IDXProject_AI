@@ -180,8 +180,8 @@ async function getMonthlyTrend(filters: MarketFilters): Promise<MonthlyTrendRow[
   `;
 
   const rows = await query<TrendRow>(sql, params);
-  console.log("Months returned:", rows.length);
-  console.log(rows.map(r => r.month));
+  //console.log("Months returned:", rows.length);
+  //console.log(rows.map(r => r.month));
   return rows.map((row, index) => {
     const previous = rows[index - 1];
     const yearAgo = rows[index - 12];
@@ -200,12 +200,12 @@ async function getMonthlyTrend(filters: MarketFilters): Promise<MonthlyTrendRow[
         ? round1(((currentAvgClose - yearAgoAvgClose) / yearAgoAvgClose) * 100)
         : null;
 
-    console.log("Months requested:", filters.months);
-    console.log("Rows returned:", rows.length);
-    console.table(rows.map(r => ({
+    //console.log("Months requested:", filters.months);
+    //console.log("Rows returned:", rows.length);
+    /*console.table(rows.map(r => ({
       month: r.month,
       avg: r.avg_close_price
-    })));
+    })));*/
     return {
       month: row.month,
       sales: toNumber(row.sales) ?? 0,

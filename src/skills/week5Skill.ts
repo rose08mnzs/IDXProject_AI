@@ -141,7 +141,7 @@ export async function week5Skill(userId: string, message: string) {
 
   const parsed = await parsePropertyQuery(userText);
 
-  const explicitCity = parsed.city ?? extractCityFromQuery(userText) ?? null;
+  /*const explicitCity = parsed.city ?? extractCityFromQuery(userText) ?? null;
   const explicitZip = extractZip(userText);
   const bareCity = extractBareCity(userText);
 
@@ -163,14 +163,81 @@ export async function week5Skill(userId: string, message: string) {
     zip: explicitZip ?? (session.marketAwaiting === "city" ? (session.marketZip ?? null) : null),
     propertyType: parsed.type ?? (hasExplicitLocation ? null : session.marketPropertyType ?? null),
     months: extractMonths(userText),
-  };
+  };*/
+  const sessionCity =
+  session.marketCity ??
+  null;
 
-  console.log({
+const sessionZip =
+  session.marketZip ??
+  null;
+
+const sessionPropertyType =
+  session.marketPropertyType ??
+  null;
+
+const sessionMonths =
+  session.marketMonths ??
+  null;
+
+const explicitCity =
+  parsed.city ??
+  extractCityFromQuery(userText) ??
+  null;
+
+const explicitZip =
+  extractZip(userText);
+
+const hasExplicitLocation =
+  Boolean(
+    explicitCity ||
+    explicitZip
+  );
+
+let city: string | null = null;
+let zip: string | null = null;
+
+if (hasExplicitLocation) {
+  city =
+    explicitCity ??
+    sessionCity;
+
+  zip =
+    explicitZip ??
+    sessionZip;
+} else if (
+  session.marketAwaiting === "city"
+) {
+  city = bareCity;
+  zip = sessionZip;
+} else {
+  city =
+    sessionCity;
+  zip =
+    sessionZip;
+}
+
+const filters: MarketFilters = {
+  city,
+  zip,
+
+  propertyType:
+    parsed.type ??
+    sessionPropertyType ??
+    null,
+
+  months:
+    extractMonths(userText) ??
+    sessionMonths ??
+    24,
+};
+
+  /*console.log({
     city: filters.city,
     zip: filters.zip,
     propertyType: filters.propertyType,
     months: filters.months,
-  });
+  });*/
 
   if (!filters.city && !filters.zip && !filters.propertyType) {
     updateSession(userId, {

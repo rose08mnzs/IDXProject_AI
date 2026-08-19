@@ -3,6 +3,8 @@ import { parsePropertyQuery } from "./parser/propertyParser";
 import { handleWeek3Search } from "./skills/week3Skill";
 import { week5Skill } from "./skills/week5Skill";
 import { week7Skill } from "./skills/week7Skill";
+import { week8Skill } from "./skills/week8Skill";
+import { week9Skill } from "./skills/week9Skill";
 const app = express();
 app.use(express.json());
 
@@ -68,6 +70,61 @@ app.post("/recommendations", async (req, res) => {
   }
 });
 
+app.post("/rag", async (req, res) => {
+  try {
+    const { query } = req.body as { query?: string };
+
+    if (!query || typeof query !== "string") {
+      return res.status(400).json({ error: "query is required" });
+    }
+
+    const result = await week8Skill("api-user", query);
+    return res.json(result);
+  } catch (error) {
+    console.error("RAG API failed:", error);
+    return res.status(500).json({ error: "RAG failed" });
+  }
+});
+app.post("/orchestrate", async (req, res) => {
+  try {
+    const {
+      query,
+      userId = "api-user",
+    } = req.body as {
+      query?: string;
+      userId?: string;
+    };
+
+    if (
+      !query ||
+      typeof query !== "string"
+    ) {
+      return res.status(400).json({
+        error: "query is required",
+      });
+    }
+
+    const result =
+      await week9Skill(
+        userId,
+        query
+      );
+
+    return res.json(
+      result
+    );
+  } catch (error) {
+    console.error(
+      "Orchestration API failed:",
+      error
+    );
+
+    return res.status(500).json({
+      error:
+        "Orchestration failed",
+    });
+  }
+});
 
 const port = Number(process.env.PORT ?? 3001);
 

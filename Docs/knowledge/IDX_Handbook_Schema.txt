@@ -1,0 +1,128 @@
+PAGE 4
+IDX Exchange | AI Agentic Engineer Intern Handbook Summer 2026
+Data Schema Reference
+Both databases live in the same MySQL schema (boxgra5_cali). You will query them
+individually and join them via shared fields such as ListingKey / L_ListingID, city, postal code,
+and coordinates. Understanding the schema deeply is fundamental to every week in this
+program.
+rets_property — Active Listings
+Column Type Description
+id INT PK Auto-increment primary key
+L_ListingID VARCHAR MLS system listing ID — joins to
+california_sold.ListingKey
+L_DisplayId VARCHAR Human-readable MLS number shown on portals
+L_Address VARCHAR Full street address
+L_City VARCHAR City — indexed for fast city-based queries
+L_Zip VARCHAR Postal code — indexed
+L_Class VARCHAR Property class: Residential, CommercialSale, Land, etc.
+L_Type_ VARCHAR Subtype: SingleFamilyResidence, Condominium, etc. —
+indexed
+L_Keyword2 INT Bedrooms total
+LM_Dec_3 DECIMAL(4,1) Bathrooms total (supports half-baths e.g. 2.5)
+L_SystemPrice INT Current list price (search/display price)
+LM_Int2_3 INT Approximate finished square footage
+L_Keyword1 VARCHAR Lot size (string, often in sq ft or acres)
+LMD_MP_Latitude DECIMAL(18,15) Geo latitude — high precision
+LMD_MP_Longitude DECIMAL(19,15) Geo longitude — high precision
+L_Status VARCHAR Listing status: Active, Pending, Withdrawn, etc.
+L_Remarks MEDIUMTEXT Full listing description — FULLTEXT indexed
+(ft_remarks)
+L_Photos LONGTEXT JSON array of Cotality/Trestle photo URLs
+LA1_UserFirstName VARCHAR Listing agent first name
+LA1_UserLastName VARCHAR Listing agent last name
+ListAgentEmail VARCHAR Listing agent email address
+ListAgentDirectPho
+ne
+VARCHAR Listing agent direct phone
+LO1_OrganizationNa
+me
+VARCHAR Listing office / brokerage name
+ListingContractDat
+e
+DATE Date listing agreement was signed
+YearBuilt INT Year property was constructed
+SubdivisionName VARCHAR Subdivision or community name
+Confidential — IDX Exchange Internship Program Page 4 of 29
+
+PAGE 5
+IDX Exchange | AI Agentic Engineer Intern Handbook Summer 2026
+Column Type Description
+AssociationFee INT Monthly HOA fee in dollars
+AssociationAmeniti
+es
+TEXT HOA amenities: Golf, Pool, Tennis, etc.
+DaysOnMarket INT Days on market at time of data pull
+PoolPrivateYN VARCHAR Private pool present (True/False)
+FireplaceYN VARCHAR Fireplace present (True/False)
+ViewYN VARCHAR Has a notable view (True/False)
+View VARCHAR View description: Mountains, Ocean, GolfCourse, etc.
+LotSizeAcres DECIMAL(10,4) Lot size in acres
+LotSizeSquareFeet DECIMAL(14,2) Lot size in square feet
+PreviousListPrice DECIMAL(12,0) Prior list price — enables price reduction analysis
+StandardStatus VARCHAR RESO standard status: Active, Pending, Closed
+CountyOrParish VARCHAR County name (e.g., Riverside, Los Angeles)
+ParcelNumber VARCHAR Assessor parcel number (APN)
+Cooling VARCHAR Cooling system type
+Heating VARCHAR Heating system type
+ArchitecturalStyle VARCHAR Architectural style: Modern, Ranch, Mediterranean, etc.
+PhotoCount INT Number of listing photos available
+ModificationTimest
+amp
+DATETIME Last modification timestamp for incremental sync
+california_sold — Sold Transactions
+Column Type Description
+ListingKey BIGINT Unique listing identifier — joins to
+rets_property.L_ListingID
+ClosePrice DOUBLE Final sale/close price
+CloseDate VARCHAR Date the transaction closed (YYYY-MM-DD format)
+OriginalListPrice DOUBLE Original asking price when first listed
+ListPrice DOUBLE List price at time of contract
+DaysOnMarket BIGINT Days from listing to contract
+PropertyType VARCHAR Residential, Land, ResidentialLease, CommercialSale,
+etc.
+PropertySubType VARCHAR SingleFamilyResidence, Condominium, Duplex, etc.
+LivingArea DOUBLE Finished living area in square feet
+LotSizeAcres DOUBLE Lot size in acres
+LotSizeSquareFeet DOUBLE Lot size in square feet
+BedroomsTotal DOUBLE Number of bedrooms
+BathroomsTotalInte
+ger
+DOUBLE Number of bathrooms
+YearBuilt DOUBLE Year property was built
+Confidential — IDX Exchange Internship Program Page 5 of 29
+
+PAGE 6
+IDX Exchange | AI Agentic Engineer Intern Handbook Summer 2026
+Column Type Description
+City VARCHAR City of the property
+PostalCode VARCHAR ZIP code
+Latitude DOUBLE Geographic latitude
+Longitude DOUBLE Geographic longitude
+UnparsedAddress VARCHAR Full street address
+ListAgentFirstName VARCHAR List agent first name
+ListAgentLastName VARCHAR List agent last name
+ListAgentFullName VARCHAR List agent full name
+BuyerAgentFirstNam
+e
+VARCHAR Buyer agent first name
+BuyerAgentLastName VARCHAR Buyer agent last name
+ListOfficeName VARCHAR Listing brokerage name
+BuyerOfficeName VARCHAR Buyer brokerage name
+PoolPrivateYN VARCHAR Private pool (True/False/empty)
+ViewYN VARCHAR Has view (True/False/empty)
+FireplaceYN VARCHAR Has fireplace (True/False/empty)
+NewConstructionYN VARCHAR New construction (True/False)
+GarageSpaces DOUBLE Number of garage spaces
+AssociationFee DOUBLE Monthly HOA fee
+SubdivisionName VARCHAR Subdivision / community name
+HighSchoolDistrict VARCHAR School district name
+ListingContractDat
+e
+VARCHAR Date listing was entered (YYYY-MM-DD)
+PurchaseContractDa
+te
+VARCHAR Date offer was accepted
+Key Join Pattern
+To correlate active listings with sold comps: JOIN rets_property r ON CAST(r.L_ListingID AS
+UNSIGNED) = cs.ListingKey — or match on city + postal code for market-level analysis.
+Confidential — IDX Exchange Internship Program Page 6 of 29

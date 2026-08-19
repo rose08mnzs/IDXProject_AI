@@ -20,9 +20,14 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
     - Week_5_IDX_Internship_AI.md
     - Week_6_IDX_Internship_AI.md
     - Week_7_IDX_Internship_AI.md
+    - Week_8_IDX_Internship_AI.md
+    - Week_9_IDX_Internship_AI.md
   - src/
     - config/
         - db.ts
+      - agents/
+        - agents.ts
+        - types.ts
       - services/
         - listings.ts
         - format.ts
@@ -30,6 +35,10 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - embeddings.ts
         - semanticSearch.ts
         - recommendation.ts
+        - embeddings.ts
+        - rag.ts
+        - intentClassifier.ts
+        - orchestrator.ts
       - session/
         - sessionManager.ts
       - skills/
@@ -38,11 +47,14 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - week4Skill.ts
         - week5Skill.ts
         - week7Skill.ts
+        - week8Skill.ts
+        - week9Skill.ts
       - parser/
         - propertyParser.ts
       - types/
         - propertyFilters.ts
         - marketAnalytics.ts
+        - rag.ts
       - tests/
         - testDb.test.ts
         - propertyParser.test.ts
@@ -53,6 +65,8 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - week6embeddings.test.ts
         - week6SemanticSearch.test.ts
         - week7Recommendation.test.ts
+        - week8Rag.test.ts
+        - week9Orchestrator.test.ts
     - OpenClaw
       - src/
         - idx/
@@ -65,7 +79,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
   - README.md
 
 ## Current status
-- Week 7 completed
+- Week 9 completed
 - OpenClaw running locally
 - MySQL database created and imported
 - WhatsApp channel linked and tested
@@ -78,6 +92,12 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 - Local embeddings and vector search working with Ollama
 - Embedding cache table implemented for performance
 - Hybrid recommendation engine
+- RAG pipeline implemented
+- Knowledge sources indexed for retrieval
+- Multi-agent orchestration implemented
+- Centralized intent classifier implemented
+- Mixed-intent query detection implemented
+
 
 ## Roadmap
 - Week 0: Environment Setup

@@ -500,10 +500,10 @@ export async function handleWeek4Conversation(
 
     return `I could not find matching homes for ${session.city ?? "your search"}. Try widening the budget or removing one filter.`;
   }
-  console.log("Semantic Hint:", session.semanticHint);
+  //console.log("Semantic Hint:", session.semanticHint);
   const rankedListings = await rerankListings(result.listings, session.semanticHint );
 
-  console.log("Candidates:", result.listings.length);
+  //console.log("Candidates:", result.listings.length);
   const finalResult = {
       ...result,
       listings: rankedListings.slice(0, 5),
