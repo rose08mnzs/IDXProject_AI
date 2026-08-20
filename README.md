@@ -39,6 +39,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - rag.ts
         - intentClassifier.ts
         - orchestrator.ts
+        - whatsapp.ts
       - session/
         - sessionManager.ts
       - skills/

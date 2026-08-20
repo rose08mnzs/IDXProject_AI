@@ -46,7 +46,7 @@ app.post("/market-analytics", async (req, res) => {
       return res.status(400).json({ error: "query is required" });
     }
 
-    const result = await week5Skill(query);
+    const result = await week5Skill("api-user",query);
     return res.json(result);
   } catch (error) {
     console.error("Market analytics API failed:", error);

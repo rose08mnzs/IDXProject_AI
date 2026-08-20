@@ -13,6 +13,7 @@
     "test:week7": "tsx src/tests/week7Recommendation.test.ts",
     "test:week8": "tsx src/tests/week8Rag.test.ts",
     "test:week9": "tsx src/tests/week9Orchestrator.test.ts",
+    "test:week10": "tsx src/tests/week10WhatsApp.test.ts",
     "dev:api": "tsx src/server.ts"
   },
   "dependencies": {
