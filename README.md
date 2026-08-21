@@ -7,7 +7,10 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 - Ollama (`nomic-embed-text`)
 - MySQL
 - WhatsApp
-- Python / TypeScript
+- TypeScript
+- Nodemailer
+- Gmail
+- Node.js
 
 ## Project structure
 - IDXProject_AI
@@ -22,6 +25,8 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
     - Week_7_IDX_Internship_AI.md
     - Week_8_IDX_Internship_AI.md
     - Week_9_IDX_Internship_AI.md
+    - Week_10_IDX_Internship_AI.md
+    - Week_11_IDX_Internship_AI.md
   - src/
     - config/
         - db.ts
@@ -40,6 +45,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - intentClassifier.ts
         - orchestrator.ts
         - whatsapp.ts
+        - email.ts
       - session/
         - sessionManager.ts
       - skills/
@@ -50,6 +56,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - week7Skill.ts
         - week8Skill.ts
         - week9Skill.ts
+        - week11Skill.ts
       - parser/
         - propertyParser.ts
       - types/
@@ -68,6 +75,9 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
         - week7Recommendation.test.ts
         - week8Rag.test.ts
         - week9Orchestrator.test.ts
+        - week11Safety.test.ts
+      - utils/
+        - photos.ts
     - OpenClaw
       - src/
         - idx/
@@ -80,7 +90,7 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
   - README.md
 
 ## Current status
-- Week 9 completed
+- Week 11 completed
 - OpenClaw running locally
 - MySQL database created and imported
 - WhatsApp channel linked and tested
@@ -98,6 +108,12 @@ A production multi-agent AI assistant capable of real-time MLS property search, 
 - Multi-agent orchestration implemented
 - Centralized intent classifier implemented
 - Mixed-intent query detection implemented
+- WhatsApp communication layer implemented
+- Email agent implemented
+- Nodemailer Gmail integration implemented
+- MLS property-photo support added to property emails
+- PDF and non-image media filtering implemented
+- Human-in-the-loop email approval workflow implemented
 
 
 ## Roadmap

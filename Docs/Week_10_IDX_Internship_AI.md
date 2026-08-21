@@ -245,7 +245,7 @@ Find me a modern spacious 3 bedroom 2 bathroom condo with natural light in Irvin
 - Property results returned through WhatsApp
 - Response contains property-result or semantic-preference information
 
-### 7. Session Reset
+### 9. Session Reset
 **Query**
 ```text
 reset

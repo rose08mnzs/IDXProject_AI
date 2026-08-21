@@ -1,4 +1,9 @@
+import type { EmailDraft } from "../agents/types";
 
+export type EmailAwaitingField =
+  | "recipient"
+  | "purpose"
+  | null;
 export type PendingIntent =
   | "market"
   | "recommend"
@@ -50,6 +55,10 @@ export interface UserSession {
 
   pendingIntents?: PendingIntent[];
   pendingQuery?: string | null;
+
+  pendingEmailDraft?: EmailDraft | null;
+  emailAwaiting?: EmailAwaitingField;
+  pendingEmailRequest?: string | null;
 }
 
 export function createEmptySession(): UserSession {
@@ -89,6 +98,10 @@ export function createEmptySession(): UserSession {
 
     pendingIntents: [],
     pendingQuery: null,
+
+    emailAwaiting: null,
+    pendingEmailRequest: null,
+    pendingEmailDraft: null,
   };
 }
 

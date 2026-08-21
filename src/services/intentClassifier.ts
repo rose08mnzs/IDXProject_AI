@@ -9,6 +9,8 @@ export interface IntentClassification {
 export interface IntentContext {
   hasActivePropertyConversation?: boolean;
   hasActiveMarketConversation?: boolean;
+  hasPendingEmailDraft?: boolean;
+  hasActiveEmailConversation?: boolean;
 }
 
 function hasAny(
@@ -107,7 +109,7 @@ function looksLikePropertySearch(
 function looksLikeEmailQuery(
   text: string
 ): boolean {
-  return /\b(email|e-mail|email me|send me an email|send an email|draft an email|prepare an email|create an email|email report|email summary)\b/.test(text);
+  return /\b(email|e-mail|email me|send me an email|send an email|draft an email|prepare an email|create an email|email report|email summary|approve email|approve|send email|send it|yes, send it|cancel|cancel email|discard email)\b/.test(text);
 }
 
 // ACTIVE SESSION SUPPORT
@@ -130,13 +132,55 @@ function applyConversationContext(
 
 // SPECIAL CASES
 function isPlainConversationalFollowUp(text: string): boolean {
-  return /^(yes|yeah|yep|no|nope|any|anything|either|flexible|whatever|sure|okay|ok|continue|go ahead)$/i.test(
+  return /^(yes|yeah|yep|no|nope|any|anything|either|flexible|whatever|sure|okay|ok|continue|go ahead|approve|send it|cancel)$/i.test(
     text.trim()
   );
 }
 function isDefinitionQuestion(text: string): boolean {
   return /\b(what does|what is|what are|define|definition of|meaning of|explain|tell me about)\b/.test(text);
 }
+
+function isEmailAddress(
+  text: string
+): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(
+    text.trim()
+  );
+}
+
+function isEmailArtifactRequest(
+  text: string
+): boolean {
+  const hasEmail =
+    /\b(email|e-mail)\b/i.test(text);
+
+  const hasArtifact =
+    /\b(property summary|market report|market summary|recommendation digest|recommendations|listing alert|matching listings|results)\b/i.test(
+      text
+    );
+
+  return hasEmail && hasArtifact;
+}
+
+function isSearchAndEmailRequest(
+  text: string
+): boolean {
+  const searchAction =
+    /\b(find|search|show|look for|looking for)\b/i.test(
+      text
+    );
+
+  const emailAction =
+    /\b(email|e-mail)\b/i.test(
+      text
+    );
+
+  return (
+    searchAction &&
+    emailAction
+  );
+}
+
 // MAIN CLASSIFIER
 export function classifyIntent(query: string,context: IntentContext = {}
 ): IntentClassification {
@@ -149,9 +193,27 @@ export function classifyIntent(query: string,context: IntentContext = {}
       confidence: 1,
     };
   }
-
+ // Email recipient follow-up
+  if (
+  context.hasActiveEmailConversation
+) {
+  return {
+    intent: "email",
+    intents: ["email"],
+    confidence: 0.99,
+  };
+}
   // Follow-up messages should use session state.
   if (isPlainConversationalFollowUp(text)) {
+    if (context.hasPendingEmailDraft &&
+      /^(yes|yeah|yep|sure|okay|ok|approve|cancel|send it|go ahead)$/i.test(text)) {
+      return {
+        intent: "email",
+        intents: ["email"],
+        confidence: 0.99,
+      };
+    }
+
     if (context.hasActivePropertyConversation) {
       return {
         intent: "search",
@@ -169,6 +231,7 @@ export function classifyIntent(query: string,context: IntentContext = {}
     }
   }
 
+
   const searchIntent =looksLikePropertySearch(text) || looksLikeSemanticQuery(text);
   const marketIntent =isMarketQuery(text);
   const recommendationIntent =looksLikeRecommendationQuery(text);
@@ -177,6 +240,44 @@ export function classifyIntent(query: string,context: IntentContext = {}
   const definitionQuestion =isDefinitionQuestion(text);
 
   let matched: Intent[] = [];
+  // RECOMMENDATION + EMAIL
+  // Example:
+  // "find similar homes and email them to me"
+  if (emailIntent && recommendationIntent ) {
+    return {
+      intent: "mixed",
+      intents: [
+        "recommend",
+        "email",
+      ],
+      confidence: 0.99,
+    };
+  }
+  // TRUE SEARCH + EMAIL REQUEST
+  // Example:
+  // "find homes in Irvine and email me the results"
+  if (isSearchAndEmailRequest(text)) {
+    return {
+      intent: "mixed",
+      intents: [
+        "search",
+        "email",
+      ],
+      confidence: 0.99,
+    };
+  }
+
+  // EMAIL ARTIFACT REQUEST
+  // Examples:
+  // "email property summary to me@gmail.com"
+  // "email market report for Irvine to me@gmail.com"
+  if (emailIntent && isEmailArtifactRequest(text)) {
+    return {
+      intent: "email",
+      intents: ["email"],
+      confidence: 0.99,
+    };
+  }
 
   if (searchIntent) {
     matched.push("search");

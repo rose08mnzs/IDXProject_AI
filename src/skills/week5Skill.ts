@@ -31,7 +31,7 @@ function extractBareCity(text: string): string | null {
   }
   return null;
 }
-
+/*
 function extractCityFromQuery(query: string): string | null {
   const normalized = query.trim().replace(/\s+/g, " ");
   const lower = normalized.toLowerCase();
@@ -46,6 +46,26 @@ function extractCityFromQuery(query: string): string | null {
   }
 
   return null;
+}*/
+function extractCityFromQuery(query: string): string | null {
+  const normalized =
+    query.trim().replace(/\s+/g, " ");
+
+  // Support:
+  // "market report in Irvine"
+  // "market report for Irvine"
+  // "analyze Irvine"
+  const match = normalized.match(
+    /\b(?:in|for)\s+([A-Za-z][A-Za-z\s'.-]*?)(?=\s+to\s+[^\s@]+@[^\s@]+\.[^\s@]+|\s+past\s+\d{1,2}\s+months?\b|\s+last\s+\d{1,2}\s+months?\b|[?.!,]+$|$)/i
+  );
+
+  if (!match?.[1]) {
+    return null;
+  }
+
+  return match[1]
+    .replace(/[?.!,]+$/g, "")
+    .trim();
 }
 
 function toNumber(value: unknown): number | null {

@@ -11,6 +11,30 @@ export interface AgentSource {
   source: string;
   type?: string;
 }
+export type EmailDraftStatus =
+  | "pending_approval"
+  | "approved"
+  | "sent"
+  | "cancelled";
+
+export type EmailDraftPurpose =
+  | "listing_alert"
+  | "market_report"
+  | "property_summary"
+  | "recommendation_digest";
+
+export interface EmailDraft {
+  id: string;
+  to: string;
+  subject: string;
+  body: string;
+  html: string;
+  purpose: EmailDraftPurpose;
+  status: EmailDraftStatus;
+  createdAt: number;
+  approvedAt?: number;
+  sentAt?: number;
+}
 
 export interface AgentResult {
   agent: string;

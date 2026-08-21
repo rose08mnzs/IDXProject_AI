@@ -14,12 +14,14 @@
     "test:week8": "tsx src/tests/week8Rag.test.ts",
     "test:week9": "tsx src/tests/week9Orchestrator.test.ts",
     "test:week10": "tsx src/tests/week10WhatsApp.test.ts",
+    "test:week11": "tsx src/tests/week11Safety.test.ts",
     "dev:api": "tsx src/server.ts"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mysql2": "^3.22.5",
+    "nodemailer": "^9.0.5",
     "openai": "^7.0.0",
     "pdf-parse": "^2.4.5"
   }

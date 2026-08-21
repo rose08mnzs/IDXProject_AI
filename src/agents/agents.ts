@@ -5,6 +5,7 @@ import { handleWeek4Conversation } from "../skills/week4Skill";
 import { week5Skill } from "../skills/week5Skill";
 import { week7Skill } from "../skills/week7Skill";
 import { week8Skill } from "../skills/week8Skill";
+import { week11Skill } from "../skills/week11Skill";
 
 import { getSession } from "../session/sessionManager";
 
@@ -80,8 +81,7 @@ export async function propertySearchAgent(
   };
 }
 
-/**
- * Week 5 market statistics agent.
+/*Week 5 market statistics agent.
  */
 export async function marketStatsAgent(
   userId: string,
@@ -104,30 +104,23 @@ export async function marketStatsAgent(
   };
 }
 
-/**
- * Week 7 recommendation agent.
+/*Week 7 recommendation agent.
  */
 export async function recommendationAgent(
   userId: string,
   query: string
 ): Promise<AgentResult> {
-  const session = getSession(userId);
-
-  const result = await week7Skill(
-    userId,
-    query
-  );
+  const result = await week7Skill( userId, query);
+  const updatedSession =getSession(userId);
 
   return {
-    agent: "recommendationAgent",
-    intent: "recommend",
-    response: result.response,
-    recommendations:
-      result.recommendations ?? [],
+    agent:"recommendationAgent",
+    intent:"recommend",
+    response:result.response,
+    recommendations:result.recommendations ?? [],
     metadata: {
-      target: result.target ?? null,
-      lastSearchResults:
-        session.lastResults.length,
+      target:result.target ?? null,
+      lastSearchResults: updatedSession.lastResults.length,
       userId,
     },
   };
@@ -157,44 +150,53 @@ export async function ragAgent(
 }
 
 /**
- * Week 9 email agent.
+ * Week 11 email agent.
  *
- * This is intentionally DRAFT ONLY because the actual
- * email send/approval workflow belongs to Week 11.
+ * This agent NEVER sends directly.
+ * It creates a draft and waits for explicit
+ * approval through the Week 11 safety gate.
  */
 export async function emailDraftAgent(
   userId: string,
   query: string
 ): Promise<AgentResult> {
-  const userText = extractUserText(query);
-
-  const subject =
-    /\bmarket\b|\btrend\b|\bprices?\b/i.test(
-      userText
-    )
-      ? "IDX Market Report"
-      : "IDX Property Summary";
-
-  const body =
-    [
-      "Email Draft",
-      "",
-      `Request: ${userText}`,
-      "",
-      "This email has been prepared as a draft only.",
-      "No email has been sent.",
-      "",
-      "Week 11 approval workflow will be responsible for explicit confirmation before sending.",
-    ].join("\n");
+  const result =
+    await week11Skill(
+      userId,
+      query
+    );
 
   return {
-    agent: "emailDraftAgent",
-    intent: "email",
-    response: body,
+    agent:
+      "emailDraftAgent",
+
+    intent:
+      "email",
+
+    response:
+      result.response,
+
     metadata: {
-      status: "pending_approval",
-      subject,
-      to: null,
+      status:
+        result.draft?.status ??
+        "none",
+
+      draftId:
+        result.draft?.id ??
+        null,
+
+      subject:
+        result.draft?.subject ??
+        null,
+
+      recipient:
+        result.draft?.to ??
+        null,
+
+      purpose:
+        result.draft?.purpose ??
+        null,
+
       userId,
     },
   };

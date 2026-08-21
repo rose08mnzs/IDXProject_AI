@@ -1,21 +1,9 @@
 import { classifyIntent } from "./intentClassifier";
 import { agentRegistry } from "../agents/agents";
+import type {AgentResult,Intent,OrchestrationResult,} from "../agents/types";
+import { getSession, updateSession,} from "../session/sessionManager";
 
-import type {
-  AgentResult,
-  Intent,
-  OrchestrationResult,
-} from "../agents/types";
-
-import {
-  getSession,
-  updateSession,
-} from "../session/sessionManager";
-
-function combineResults(
-  intent: Intent,
-  results: AgentResult[]
-): string {
+function combineResults( intent: Intent, results: AgentResult[]): string {
   if (results.length === 0) {
     return "I could not find an agent that can handle that request.";
   }
@@ -38,11 +26,8 @@ function combineResults(
   ].join("\n\n");
 }
 
-async function runSingleAgent(
-  intent: Exclude<Intent, "mixed" | "unknown">,
-  userId: string,
-  query: string
-): Promise<AgentResult> {
+async function runSingleAgent( intent: Exclude<Intent, "mixed" | "unknown">,
+  userId: string, query: string): Promise<AgentResult> {
   const agent = agentRegistry[intent];
 
   if (!agent) {
@@ -54,10 +39,7 @@ async function runSingleAgent(
   return agent(userId, query);
 }
 
-function buildPendingMarketQuery(
-  userId: string,
-  fallbackQuery: string
-): string {
+function buildPendingMarketQuery( userId: string, fallbackQuery: string): string {
   const session = getSession(userId);
 
   const parts: string[] = [];
@@ -85,56 +67,31 @@ function buildPendingMarketQuery(
   return marketQuery || fallbackQuery;
 }
 
-function syncPendingMarketFilters(
-  userId: string
-): void {
+function syncPendingMarketFilters( userId: string): void {
   const session = getSession(userId);
+  const pendingIntents =  session.pendingIntents ?? [];
 
-  const pendingIntents =
-    session.pendingIntents ?? [];
-
-  if (
-    !pendingIntents.includes("market")
-  ) {
+  if (!pendingIntents.includes("market") ) {
     return;
   }
 
   updateSession(userId, {
-    marketCity:
-      session.city ??
-      session.marketCity ??
-      null,
-
-    marketZip:
-      session.zip ??
-      session.marketZip ??
-      null,
-
-    marketPropertyType:
-      session.type ??
-      session.marketPropertyType ??
-      null,
-
-    marketMonths:
-      session.marketMonths ??
-      24,
+    marketCity: session.city ?? session.marketCity ?? null,
+    marketZip: session.zip ?? session.marketZip ?? null,
+    marketPropertyType: session.type ?? session.marketPropertyType ?? null,
+    marketMonths: session.marketMonths ?? 24,
   });
 }
 
-export async function orchestrate(
-  query: string,
-  userId: string
-): Promise<OrchestrationResult> {
+export async function orchestrate(query: string, userId: string): Promise<OrchestrationResult> {
   const session = getSession(userId);
 
-  const classification =
-    classifyIntent(query, {
-      hasActivePropertyConversation:
-        session.awaiting !== null,
-
-      hasActiveMarketConversation:
-        session.marketAwaiting !== null,
-    });
+  const classification =classifyIntent(query, {
+    hasActivePropertyConversation: session.awaiting !== null,
+    hasActiveMarketConversation: session.marketAwaiting !== null,
+    hasPendingEmailDraft: Boolean(session.pendingEmailDraft),
+    hasActiveEmailConversation:session.emailAwaiting !== null,
+  });
 
   //console.log("========== WEEK 9 ORCHESTRATOR ==========");
 
@@ -146,14 +103,9 @@ export async function orchestrate(
 
  // console.log("Confidence:",classification.confidence);
 
-
-  // ==================================================
   // UNKNOWN
-  // ==================================================
 
-  if (
-    classification.intent === "unknown"
-  ) {
+  if (classification.intent === "unknown") {
     return {
       intent: "unknown",
       agents: [],
@@ -163,21 +115,10 @@ export async function orchestrate(
     };
   }
 
-  // ==================================================
   // MIXED INTENT
-  // ==================================================
-
-  if (
-    classification.intent === "mixed"
-  ) {
-    const runnableIntents =
-      classification.intents.filter(
-        (
-          intent
-        ): intent is Exclude<
-          Intent,
-          "mixed" | "unknown"
-        > =>
+  if (classification.intent === "mixed") {
+    const runnableIntents = classification.intents.filter((intent): intent is Exclude<
+          Intent,"mixed" | "unknown" > =>
           intent === "search" ||
           intent === "market" ||
           intent === "recommend" ||
@@ -187,43 +128,19 @@ export async function orchestrate(
 
     const results: AgentResult[] = [];
 
-    // --------------------------------------------------
     // 1. PROPERTY SEARCH RUNS FIRST
-    // --------------------------------------------------
-
-    if (
-      runnableIntents.includes("search")
-    ) {
+    if (runnableIntents.includes("search")) {
       //console.log( "Week 9 mixed query: running propertySearchAgent first...");
 
-      const propertyResult =
-        await runSingleAgent(
-          "search",
-          userId,
-          query
-        );
+      const propertyResult = await runSingleAgent("search",userId,query);
 
-      results.push(
-        propertyResult
-      );
+      results.push(propertyResult);
 
-      let updatedSession =
-        getSession(userId);
+      let updatedSession = getSession(userId);
 
-      // ------------------------------------------------
-      // Week 4 needs another answer.
-      //
       // Save all non-search intents and stop.
-      // ------------------------------------------------
-
-      if (
-        updatedSession.awaiting !== null
-      ) {
-        const pendingIntents =
-          runnableIntents.filter(
-            (
-              intent
-            ): intent is
+      if (updatedSession.awaiting !== null) {
+        const pendingIntents =runnableIntents.filter((intent): intent is
               | "market"
               | "recommend"
               | "knowledge"
@@ -235,26 +152,11 @@ export async function orchestrate(
           pendingIntents,
           pendingQuery: query,
 
-          // Populate the existing Week 5 fields
-          // using whatever Week 4 has learned so far.
-          marketCity:
-            updatedSession.city ??
-            updatedSession.marketCity ??
-            null,
-
-          marketZip:
-            updatedSession.zip ??
-            updatedSession.marketZip ??
-            null,
-
-          marketPropertyType:
-            updatedSession.type ??
-            updatedSession.marketPropertyType ??
-            null,
-
-          marketMonths:
-            updatedSession.marketMonths ??
-            24,
+          // Populate the existing Week 5 fields using whatever Week 4 has learned so far.
+          marketCity: updatedSession.city ?? updatedSession.marketCity ?? null,
+          marketZip: updatedSession.zip ?? updatedSession.marketZip ?? null,
+          marketPropertyType: updatedSession.type ?? updatedSession.marketPropertyType ?? null,
+          marketMonths: updatedSession.marketMonths ?? 24,
         });
 
         //console.log( "Week 4 is waiting for:",updatedSession.awaiting);
@@ -265,219 +167,113 @@ export async function orchestrate(
 
         return {
           intent: "mixed",
-
-          agents: [
-            propertyResult.agent,
-          ],
-
-          response:
-            propertyResult.response,
-
-          results: [
-            propertyResult,
-          ],
-
+          agents: [propertyResult.agent,],
+          response:propertyResult.response,
+          results: [propertyResult,],
           metadata: {
-            confidence:
-              classification.confidence,
-
-            detectedIntents:
-              classification.intents,
-
+            confidence:classification.confidence,
+            detectedIntents:classification.intents,
             pendingIntents,
-
-            pendingQuery:
-              query,
-
-            awaiting:
-              updatedSession.awaiting,
+            pendingQuery:query,
+            awaiting:updatedSession.awaiting,
           },
         };
       }
     }
 
-    // --------------------------------------------------
     // 2. NO PROPERTY FOLLOW-UP NEEDED
-    //
     // Run remaining agents now.
-    // --------------------------------------------------
+    const remainingIntents = runnableIntents.filter((intent) =>intent !== "search" &&
+        intent !== "email" );
 
-    const remainingIntents =
-      runnableIntents.filter(
-        (intent) =>
-          intent !== "search"
+  // Run non-email agents first.
+  if (remainingIntents.length > 0) {
+    const remainingResults =
+      await Promise.all(
+        remainingIntents.map(
+          (intent) => {
+            const agentQuery =intent === "market" ? buildPendingMarketQuery(
+                    userId, query): query;
+
+            return runSingleAgent( intent, userId, agentQuery );
+          }
+        )
       );
 
-    if (
-      remainingIntents.length > 0
-    ) {
-     // console.log( "Week 9 running remaining agents:",remainingIntents);
+    results.push(...remainingResults);
+  }
 
-      const remainingResults =
-        await Promise.all(
-          remainingIntents.map(
-            (intent) => {
-              const agentQuery =
-                intent === "market"
-                  ? buildPendingMarketQuery(
-                      userId,
-                      query
-                    )
-                  : query;
+  // EMAIL MUST RUN LAST.
+  // Week 11 reads session.lastResults.
+  // Recommendation/property agents must finish first.
+  if (runnableIntents.includes("email")) {
+    const emailResult = await runSingleAgent("email",userId,query);
 
-              return runSingleAgent(
-                intent,
-                userId,
-                agentQuery
-              );
-            }
-          )
-        );
-
-      results.push(
-        ...remainingResults
-      );
-    }
-
+    results.push(emailResult);
+  }
+    const emailResult = results.find((result) =>result.intent === "email");
+    const response = emailResult ? emailResult.response : combineResults(
+        "mixed", results );
     return {
       intent: "mixed",
-
-      agents:
-        results.map(
-          (result) =>
-            result.agent
-        ),
-
-      response:
-        combineResults(
-          "mixed",
-          results
-        ),
-
+      agents: results.map((result) => result.agent ),
+      response,
       results,
-
       metadata: {
-        confidence:
-          classification.confidence,
-
-        detectedIntents:
-          classification.intents,
+        confidence:classification.confidence,
+        detectedIntents:classification.intents,
       },
     };
   }
 
-  // ==================================================
   // SINGLE INTENT
-  // ==================================================
+  const result = await runSingleAgent(classification.intent, userId,query);
+  const updatedSession = getSession(userId);
+  const pendingIntents = updatedSession.pendingIntents ?? [];
+  const pendingQuery =updatedSession.pendingQuery ?? null;
 
-  const result =
-    await runSingleAgent(
-      classification.intent,
-      userId,
-      query
-    );
+  // Week 4 is still asking questions. Keep waiting.
 
-  const updatedSession =
-    getSession(userId);
-
-  const pendingIntents =
-    updatedSession.pendingIntents ??
-    [];
-
-  const pendingQuery =
-    updatedSession.pendingQuery ??
-    null;
-
-  // --------------------------------------------------
-  // Week 4 is still asking questions.
-  //
-  // Keep waiting.
-  // --------------------------------------------------
-
-  if (
-    classification.intent === "search" &&
-    updatedSession.awaiting !== null
-  ) {
+  if (classification.intent === "search" && updatedSession.awaiting !== null) {
     // Keep the existing market fields synchronized
     // with the latest property-search information.
-    syncPendingMarketFilters(
-      userId
-    );
+    syncPendingMarketFilters(userId);
 
-    const synchronizedSession =
-      getSession(userId);
+    const synchronizedSession = getSession(userId);
 
     return {
       intent: "search",
-
-      agents: [
-        result.agent,
-      ],
-
-      response:
-        result.response,
-
-      results: [
-        result,
-      ],
-
+      agents: [result.agent,],
+      response:result.response,
+      results: [result,],
       metadata: {
-        confidence:
-          classification.confidence,
-
-        detectedIntents:
-          classification.intents,
-
-        pendingIntents:
-          synchronizedSession.pendingIntents ??
-          [],
-
-        pendingQuery:
-          synchronizedSession.pendingQuery ??
-          null,
-
-        awaiting:
-          synchronizedSession.awaiting,
+        confidence:classification.confidence,
+        detectedIntents:classification.intents,
+        pendingIntents:synchronizedSession.pendingIntents ?? [],
+        pendingQuery:synchronizedSession.pendingQuery ?? null,
+        awaiting:synchronizedSession.awaiting,
       },
     };
   }
 
-  // --------------------------------------------------
   // Week 4 finished.
-  //
   // Run previously pending agents.
-  // --------------------------------------------------
 
-  if (
-    classification.intent === "search" &&
-    updatedSession.awaiting === null &&
-    pendingIntents.length > 0
-  ) {
+  if (classification.intent === "search" && updatedSession.awaiting === null &&
+    pendingIntents.length > 0) {
     //console.log("Week 9 property search completed.");
-
     //console.log("Pending intents:",pendingIntents);
 
     const pendingResults =
       await Promise.all(
         pendingIntents.map(
           (intent) => {
-            const agentQuery =
-              intent === "market"
-                ? buildPendingMarketQuery(
-                    userId,
-                    pendingQuery ??
-                      query
-                  )
-                : pendingQuery ??
-                  query;
+            const agentQuery = intent === "market" ? buildPendingMarketQuery(
+                    userId, pendingQuery ?? query) : pendingQuery ?? query;
 
            // console.log(`Running pending ${intent} agent with query:`,agentQuery );
 
-            return runSingleAgent(
-              intent,
-              userId,
-              agentQuery
-            );
+            return runSingleAgent(intent,userId,agentQuery);
           }
         )
       );
@@ -496,70 +292,33 @@ export async function orchestrate(
       marketMonths: null,
     });
 
-    const combinedResults = [
-      result,
-      ...pendingResults,
-    ];
-
+    const combinedResults = [result,...pendingResults,];
+    const emailResult =combinedResults.find((item) =>item.intent === "email");
+    const response = emailResult ? emailResult.response : combineResults(
+        "mixed", combinedResults );
     return {
       intent: "mixed",
-
-      agents:
-        combinedResults.map(
-          (item) =>
-            item.agent
-        ),
-
-      response:
-        combineResults(
-          "mixed",
-          combinedResults
-        ),
-
-      results:
-        combinedResults,
-
+      agents: combinedResults.map((item) =>item.agent),
+      response,
+      results:combinedResults,
       metadata: {
-        confidence:
-          classification.confidence,
-
-        detectedIntents:
-          classification.intents,
-
+        confidence:classification.confidence,
+        detectedIntents:classification.intents,
         pendingIntents,
-
-        pendingQuery:
-          pendingQuery ??
-          query,
+        pendingQuery:pendingQuery ?? query,
       },
     };
   }
 
-  // --------------------------------------------------
   // Normal single-intent response
-  // --------------------------------------------------
-
   return {
-    intent:
-      classification.intent,
-
-    agents: [
-      result.agent,
-    ],
-
-    response:
-      result.response,
-
-    results: [
-      result,
-    ],
-
+    intent:classification.intent,
+    agents: [result.agent,],
+    response:result.response,
+    results: [result,],
     metadata: {
-      confidence:
-        classification.confidence,
-
-      detectedIntents:
-        classification.intents,
+      confidence:classification.confidence,
+      detectedIntents:classification.intents,
     },
   };
 }
