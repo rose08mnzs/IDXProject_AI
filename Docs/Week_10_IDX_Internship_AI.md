@@ -309,7 +309,7 @@ npm run test:week10
 
 ### Example 5 - Mixed-Intent Conversation
 ![Mixed1](Images/Week10_mixed1.png)
-![Mixed1.1](Images/Week10_mixed2.1.png)
+![Mixed1.1](Images/Week10_mixed2.png)
 
 
 ### Week 10 Test
